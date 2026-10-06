@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% set active = 'new' %}
+{% block title %}New check · TrustGuard{% endblock %}
+{% block crumb %}New check{% endblock %}
+{% block content %}
+<h1>Check a profile before you connect</h1>
+<p class="sub">Add a username, a profile photo and the location the
+person claims. TrustGuard looks at public signals, photo metadata and
+consistency clues to give a Trust Score and Risk Level.</p>
+<div class="grid2">
+  <form class="card" method="post" action="/submit"
+        enctype="multipart/form-data">
+    <b>What do you want to check?</b>
+    <p class="hint">More details give a more complete score.</p>
+
+
+    <label for="username">Username or profile handle *</label>
+    <input class="field" id="username" name="username"
+           placeholder="@username" required>
+    <label for="photo">Profile photo *</label>
+    <input class="field" id="photo" name="photo" type="file"
+           accept="image/jpeg,image/png" required>
+    <p class="hint" style="margin-top:-8px">Use a clear photo. We read
+      camera details, timestamp and GPS if present.</p>
+    <label for="location">Claimed location</label>
+    <input class="field" id="location" name="claimed_location"
+           placeholder="City, region or country">
+    <label style="font-weight:400;margin-bottom:14px">
+      <input type="checkbox" name="consent" required>
+      I understand the photo is used only to read metadata and is
+      deleted once analysis finishes.
+    </label>
+    <div class="actions">
+      <button class="btn o" type="button">Save draft</button>
+      <button class="btn" type="submit">Run TrustGuard check</button>
+    </div>
+  </form>
+  <div>
+    <div class="card" style="margin-bottom:12px">
+      <b>What happens next</b>
+      <div style="margin-top:12px">
+        <div class="step"><div class="dot"></div><div>
+          <b>Username enumeration</b>
+          <span>Searches public platforms for the handle.</span>
+        </div></div>
+        <div class="step"><div class="dot"></div><div>
+          <b>Image EXIF analysis</b>
+          <span>Camera, timestamp and GPS if present.</span>
+        </div></div>
+        <div class="step"><div class="dot"></div><div>
+          <b>Profile consistency</b>
+          <span>Compares name, bio and location across profiles.</span>
+        </div></div>
+      </div>
+    </div>
+    <div class="card">
+      <b>How we handle your data</b>
+      <p class="hint" style="margin:4px 0 0">Photos are deleted after
+        metadata extraction. Case results stay in your workspace.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

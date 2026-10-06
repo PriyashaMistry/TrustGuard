@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}TrustGuard{% endblock %}</title>
+  <link rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><span class="logo"></span>TrustGuard</div>
+    <a class="nav {% if active=='dashboard' %}on{% endif %}"
+       href="/dashboard">Dashboard</a>
+    <a class="nav {% if active=='new' %}on{% endif %}"
+       href="/new-case">New check</a>
+    <a class="nav {% if active=='all' %}on{% endif %}"
+       href="/cases">All checks</a>
+    <div class="foot">Analyst workspace<br>Internal · Secure</div>
+  </aside>
+  <div class="main">
+    <div class="top">
+      <span>TrustGuard / {% block crumb %}{% endblock %}</span>
+      <span>l Systems operational &nbsp; R. Kim</span>
+    </div>
+    <div class="content">
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+</div>
+</body>
+</html>
