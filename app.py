@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request
 app = Flask(__name__)
 
-@app.route("/new-case")
+@app.route("/")
 def new_case():
     return render_template("input.html")
 @app.route("/submit", methods=["POST"])
