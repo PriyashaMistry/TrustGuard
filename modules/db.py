@@ -34,3 +34,20 @@ def init_db():
     print("Database initialized successfully.")
 if __name__ == "__main__":
     init_db()
+
+import sqlite3
+from datetime import datetime
+def add_case(username, image_path, claimed_location):
+    conn = sqlite3.connect("trustguard.db")
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO Case_Table "
+        "(username, image_path, claimed_location, created_at, status) "
+        "VALUES (?, ?, ?, ?, ?)",
+        (username, image_path, claimed_location,
+         datetime.now().isoformat(), "pending"))
+    conn.commit()
+    case_id = cur.lastrowid
+    conn.close()
+    return case_id
+
