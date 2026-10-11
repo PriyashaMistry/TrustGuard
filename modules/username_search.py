@@ -1,6 +1,8 @@
 import json 
 import re 
 import subprocess 
+import tempfile
+import os
 
 def search_sherlock(username, timeout=10):
     """Run Sherlock on a username and return the sites where it was found."""
@@ -43,7 +45,37 @@ def search_sherlock(username, timeout=10):
         "stderr": proc.stderr.strip(),
     }
 
+def search_maigret(username, timeout=120):
+    out_dir = tempfile.mkdtemp()
+    cmd = ["maigret", username, "-J", "simple",
+           "--folderoutput", out_dir, "--timeout", "10",
+           "--dns-resolver", "threaded", "--no-recursion"]
+    
+    env = os.environ.copy()
+    env["PYTHONIOENCODING"] = "utf-8"
+    env["PYTHONUTF8"] = "1"
+    
+    try:
+        result = subprocess.run(cmd, capture_output=True,
+                        text=True, encoding="utf-8",
+                        errors="replace", env=env,
+                        timeout=timeout)
+    except subprocess.TimeoutExpired:
+        return {"tool": "maigret", "error": "timeout", "hits": []}
+
+    hits = []
+    report = os.path.join(out_dir, f"report_{username}_simple.json")
+    if os.path.exists(report):
+        with open(report, encoding="utf-8") as f:
+            data = json.load(f)
+        for site, info in data.items():
+            if info["status"]["status"] == "Claimed":
+                hits.append({"site": site, "url": info["status"]["url"]})
+
+    return {"tool": "maigret", "returncode": result.returncode,
+            "stderr": result.stderr[-800:],
+            "hits": hits}
 
 if __name__ == "__main__":
-    # Change the name below to a username you know exists.
-    print(json.dumps(search_sherlock("elenamarlowe"), indent=2))
+        print(json.dumps(search_sherlock("elenamarlowe"), indent=2))
+        print(json.dumps(search_maigret("elenamarlowe"), indent=2))
