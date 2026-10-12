@@ -1,8 +1,56 @@
+# TrustGuard result format (agreed with Amruta)
+# {
+#   "username": "elenamarlowe",
+#   "tool": "sherlock" or "maigret",
+#   "results": [
+#     {"platform": "GitHub", "status": "found",
+#      "url": "https://github.com/elenamarlowe",
+#      "low_confidence": false}
+#   ]
+# }
+# Only "found" results are kept (decided with Amruta: <write her answer>).
+
 import json 
 import re 
 import subprocess 
 import tempfile
 import os
+
+LOW_CONFIDENCE = {
+    "aniworld", "trakt", "fl", "fl.ru", "mastodon.cloud", "babyru",
+    "boardgamegeek", "vero", "omg.lol", "chatujme.cz", "salon24.pl",
+    "google scholar", "wishlistr", "ourdjtalk", "status cafe",
+}
+
+def parse_sherlock(raw_output, username):
+    results = []
+    for line in (raw_output or "").splitlines():
+        m = re.match(r"\[\+\]\s+(.+?):\s+(https?://\S+)", line.strip())
+        if not m:
+            continue
+        platform, url = m.group(1), m.group(2)
+        results.append({"platform": platform, "status": "found",
+                        "url": url,
+                        "low_confidence": platform.lower() in LOW_CONFIDENCE})
+    return {"username": username, "tool": "sherlock", "results": results}
+
+
+def parse_maigret(report_data, username):
+    results = []
+    if isinstance(report_data, dict):
+        for platform, info in report_data.items():
+            if not isinstance(info, dict):
+                continue
+            st = info.get("status")
+            if not isinstance(st, dict) or st.get("status") != "Claimed":
+                continue
+            url = st.get("url") or info.get("url_user")
+            if not url:
+                continue
+            results.append({"platform": platform, "status": "found",
+                            "url": url,
+                            "low_confidence": platform.lower() in LOW_CONFIDENCE})
+    return {"username": username, "tool": "maigret", "results": results}
 
 def search_sherlock(username, timeout=10):
     """Run Sherlock on a username and return the sites where it was found."""
@@ -43,6 +91,7 @@ def search_sherlock(username, timeout=10):
         "count": len(found),
         "returncode": proc.returncode,
         "stderr": proc.stderr.strip(),
+        "raw_output": proc.stdout,
     }
 
 def search_maigret(username, timeout=120):
@@ -65,6 +114,7 @@ def search_maigret(username, timeout=120):
 
     hits = []
     report = os.path.join(out_dir, f"report_{username}_simple.json")
+    data = {}
     if os.path.exists(report):
         with open(report, encoding="utf-8") as f:
             data = json.load(f)
@@ -74,7 +124,9 @@ def search_maigret(username, timeout=120):
 
     return {"tool": "maigret", "returncode": result.returncode,
             "stderr": result.stderr[-800:],
-            "hits": hits}
+            "hits": hits,
+            "report": data,
+            }
 
 if __name__ == "__main__":
         print(json.dumps(search_sherlock("elenamarlowe"), indent=2))
